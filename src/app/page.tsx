@@ -58,6 +58,9 @@ function getInitialJoinCode(): string {
 
 function getInitialScreen(): 'home' | 'create' | 'join' | 'lobby' | 'game' | 'scorecard' | 'gameover' {
   if (typeof window === 'undefined') return 'home'
+  // If we have a saved game, go straight to reconnect view
+  const saved = localStorage.getItem('golfroulette_session')
+  if (saved) return 'reconnecting'
   const params = new URLSearchParams(window.location.search)
   const joinParam = params.get('join')
   return joinParam && joinParam.length === 5 ? 'join' : 'home'
@@ -66,7 +69,7 @@ function getInitialScreen(): 'home' | 'create' | 'join' | 'lobby' | 'game' | 'sc
 export default function GolfRoulette() {
   const [socket, setSocket] = useState<Socket | null>(null)
   const [connected, setConnected] = useState(false)
-  const [screen, setScreen] = useState<'home' | 'create' | 'join' | 'lobby' | 'game' | 'scorecard' | 'gameover'>(getInitialScreen)
+  const [screen, setScreen] = useState<'home' | 'create' | 'join' | 'lobby' | 'game' | 'scorecard' | 'gameover' | 'reconnecting'>(getInitialScreen)
   const [gameId, setGameId] = useState('')
   const [playerId, setPlayerId] = useState('')
   const [game, setGame] = useState<GameState | null>(null)
@@ -86,6 +89,24 @@ export default function GolfRoulette() {
   const [flashFx, setFlashFx] = useState('')
 
   const flashTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+
+  // ============ LOCALSTORAGE PERSISTENCE ============
+  const saveSession = useCallback((gId: string, pId: string) => {
+    localStorage.setItem('golfroulette_session', JSON.stringify({ gameId: gId, playerId: pId }))
+    console.log('[SESSION] Saved:', gId, pId)
+  }, [])
+
+  const clearSession = useCallback(() => {
+    localStorage.removeItem('golfroulette_session')
+    console.log('[SESSION] Cleared')
+  }, [])
+
+  const loadSession = useCallback((): { gameId: string; playerId: string } | null => {
+    try {
+      const raw = localStorage.getItem('golfroulette_session')
+      return raw ? JSON.parse(raw) : null
+    } catch { return null }
+  }, [])
 
   // ============ SOCKET CONNECTION ============
   useEffect(() => {
@@ -108,11 +129,25 @@ export default function GolfRoulette() {
       ? io(wsUrl, { ...socketOptions, path: '/socket' })
       : io('/?XTransformPort=3003', socketOptions)
 
-    // Use callback to set socket to avoid synchronous setState in effect
+    // On connect: set state + auto-rejoin if we have a saved session
     socketInstance.on('connect', () => {
       setSocket(socketInstance)
       setConnected(true)
       console.log('[SOCKET] Connected:', socketInstance.id)
+
+      // Auto-rejoin saved game
+      const saved = localStorage.getItem('golfroulette_session')
+      if (saved) {
+        try {
+          const { gameId: savedGameId, playerId: savedPlayerId } = JSON.parse(saved)
+          if (savedGameId && savedPlayerId) {
+            console.log('[RECONNECT] Auto-rejoining game:', savedGameId)
+            socketInstance.emit('rejoin-game', { gameId: savedGameId, playerId: savedPlayerId })
+          }
+        } catch (e) {
+          localStorage.removeItem('golfroulette_session')
+        }
+      }
     })
 
     socketInstance.on('disconnect', () => {
@@ -126,6 +161,7 @@ export default function GolfRoulette() {
       setGame(data.game)
       setScreen('lobby')
       setEventMessage('🎮 GAME CREATED! Share the code!')
+      saveSession(data.gameId, data.playerId)
     })
 
     socketInstance.on('game-joined', (data: { gameId: string; playerId: string; game: GameState }) => {
@@ -134,6 +170,7 @@ export default function GolfRoulette() {
       setGame(data.game)
       setScreen('lobby')
       setEventMessage('🎮 JOINED! Waiting for host to start...')
+      saveSession(data.gameId, data.playerId)
     })
 
     socketInstance.on('game-updated', (data: { game: GameState; event: string }) => {
@@ -184,15 +221,17 @@ export default function GolfRoulette() {
     socketInstance.on('game-rejoined', (data: { playerId: string; game: GameState }) => {
       setPlayerId(data.playerId)
       setGame(data.game)
+      saveSession(data.game.id, data.playerId)
       if (data.game.status === 'lobby') setScreen('lobby')
       else if (data.game.status === 'playing') setScreen('game')
       else if (data.game.status === 'finished') setScreen('gameover')
+      setEventMessage('🔄 RECONNECTED! Welcome back!')
     })
 
     return () => {
       socketInstance.disconnect()
     }
-  }, [])
+  }, [saveSession])
 
   // ============ ACTIONS ============
   const createGame = useCallback(() => {
@@ -243,6 +282,18 @@ export default function GolfRoulette() {
   const isHost = useCallback(() => {
     return game?.hostId === playerId
   }, [game, playerId])
+
+  const leaveGame = useCallback(() => {
+    if (socket) socket.emit('leave-game')
+    clearSession()
+    setGame(null)
+    setGameId('')
+    setPlayerId('')
+    setScreen('home')
+    setEventMessage('')
+    setWheelResult(null)
+    setShowHandicap(false)
+  }, [socket, clearSession])
 
   const hasEnteredScore = useCallback(() => {
     return game?.scoresEntered.includes(playerId)
@@ -1063,15 +1114,7 @@ export default function GolfRoulette() {
 
           {/* Play Again */}
           <button
-            onClick={() => {
-              setGame(null)
-              setGameId('')
-              setPlayerId('')
-              setScreen('home')
-              setEventMessage('')
-              setWheelResult(null)
-              setShowHandicap(false)
-            }}
+            onClick={leaveGame}
             className="arcade-btn-green arcade-btn w-full text-sm"
           >
             🎮 PLAY AGAIN!
@@ -1080,6 +1123,32 @@ export default function GolfRoulette() {
       </div>
     )
   }
+
+  // ============ RECONNECTING SCREEN ============
+  const renderReconnecting = () => (
+    <div className="flex flex-col items-center justify-center min-h-screen p-4 arcade-screen">
+      <div className="crt-overlay" />
+      <div className="relative z-10 w-full max-w-md">
+        {renderHeader()}
+        <div className="pixel-border p-6 bg-[#0a0a1a] rounded-lg text-center">
+          <div className="text-6xl mb-4">📡</div>
+          <h2 className="font-[var(--font-arcade)] text-sm neon-cyan mb-4">RECONNECTING...</h2>
+          <p className="font-[var(--font-retro)] text-base text-[#00ffff] mb-4">
+            Finding your game...
+          </p>
+          <p className="font-[var(--font-arcade)] text-[8px] text-[#6688aa] mb-6 animate-blink">
+            YOUR GAME IS STILL RUNNING
+          </p>
+          <button
+            onClick={leaveGame}
+            className="arcade-btn w-full text-[10px] opacity-70"
+          >
+            ✕ LEAVE GAME
+          </button>
+        </div>
+      </div>
+    </div>
+  )
 
   // ============ MAIN RENDER ============
   return (
@@ -1095,6 +1164,7 @@ export default function GolfRoulette() {
         {screen === 'home' && renderHome()}
         {screen === 'create' && renderCreate()}
         {screen === 'join' && renderJoin()}
+        {screen === 'reconnecting' && renderReconnecting()}
         {screen === 'lobby' && renderLobby()}
         {screen === 'game' && renderGame()}
         {screen === 'gameover' && renderGameOver()}
