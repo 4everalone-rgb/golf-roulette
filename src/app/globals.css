@@ -1,0 +1,318 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-retro);
+  --font-mono: var(--font-arcade);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+:root {
+  --radius: 0.625rem;
+  --background: #0a0a1a;
+  --foreground: #00ff41;
+  --card: #111133;
+  --card-foreground: #00ff41;
+  --popover: #111133;
+  --popover-foreground: #00ff41;
+  --primary: #ff0080;
+  --primary-foreground: #ffffff;
+  --secondary: #1a1a4e;
+  --secondary-foreground: #00ffff;
+  --muted: #1a1a3e;
+  --muted-foreground: #6688aa;
+  --accent: #ffff00;
+  --accent-foreground: #0a0a1a;
+  --destructive: #ff3333;
+  --border: #3333aa;
+  --input: #1a1a4e;
+  --ring: #ff0080;
+  --chart-1: #00ff41;
+  --chart-2: #ff0080;
+  --chart-3: #00ffff;
+  --chart-4: #ffff00;
+  --chart-5: #ff6600;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-retro), monospace;
+  }
+}
+
+/* CRT Scanline Effect */
+.crt-overlay {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.15) 0px,
+    rgba(0, 0, 0, 0.15) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+}
+
+/* Neon Glow Text */
+.neon-green {
+  color: #00ff41;
+  text-shadow: 0 0 7px #00ff41, 0 0 10px #00ff41, 0 0 21px #00ff41, 0 0 42px #00aa2a;
+}
+
+.neon-pink {
+  color: #ff0080;
+  text-shadow: 0 0 7px #ff0080, 0 0 10px #ff0080, 0 0 21px #ff0080, 0 0 42px #aa0055;
+}
+
+.neon-cyan {
+  color: #00ffff;
+  text-shadow: 0 0 7px #00ffff, 0 0 10px #00ffff, 0 0 21px #00ffff, 0 0 42px #00aaaa;
+}
+
+.neon-yellow {
+  color: #ffff00;
+  text-shadow: 0 0 7px #ffff00, 0 0 10px #ffff00, 0 0 21px #ffff00, 0 0 42px #aaaa00;
+}
+
+.neon-orange {
+  color: #ff6600;
+  text-shadow: 0 0 7px #ff6600, 0 0 10px #ff6600, 0 0 21px #ff6600, 0 0 42px #aa4400;
+}
+
+/* Arcade Button */
+.arcade-btn {
+  font-family: var(--font-arcade), monospace;
+  background: linear-gradient(180deg, #ff0080 0%, #cc0066 50%, #99004d 100%);
+  color: white;
+  border: 3px solid #ff66b2;
+  box-shadow: 0 4px 0 #660033, 0 6px 20px rgba(255, 0, 128, 0.5);
+  padding: 12px 24px;
+  font-size: 14px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.1s;
+  image-rendering: pixelated;
+}
+
+.arcade-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 0 #660033, 0 8px 25px rgba(255, 0, 128, 0.6);
+}
+
+.arcade-btn:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 #660033, 0 3px 10px rgba(255, 0, 128, 0.4);
+}
+
+.arcade-btn-green {
+  background: linear-gradient(180deg, #00ff41 0%, #00cc33 50%, #009926 100%);
+  border-color: #66ff8c;
+  box-shadow: 0 4px 0 #006619, 0 6px 20px rgba(0, 255, 65, 0.5);
+}
+
+.arcade-btn-green:hover {
+  box-shadow: 0 6px 0 #006619, 0 8px 25px rgba(0, 255, 65, 0.6);
+}
+
+.arcade-btn-green:active {
+  box-shadow: 0 2px 0 #006619, 0 3px 10px rgba(0, 255, 65, 0.4);
+}
+
+.arcade-btn-cyan {
+  background: linear-gradient(180deg, #00ffff 0%, #00cccc 50%, #009999 100%);
+  border-color: #66ffff;
+  color: #0a0a1a;
+  box-shadow: 0 4px 0 #006666, 0 6px 20px rgba(0, 255, 255, 0.5);
+}
+
+.arcade-btn-cyan:hover {
+  box-shadow: 0 6px 0 #006666, 0 8px 25px rgba(0, 255, 255, 0.6);
+}
+
+.arcade-btn-cyan:active {
+  box-shadow: 0 2px 0 #006666, 0 3px 10px rgba(0, 255, 255, 0.4);
+}
+
+.arcade-btn-yellow {
+  background: linear-gradient(180deg, #ffff00 0%, #cccc00 50%, #999900 100%);
+  border-color: #ffff66;
+  color: #0a0a1a;
+  box-shadow: 0 4px 0 #666600, 0 6px 20px rgba(255, 255, 0, 0.5);
+}
+
+.arcade-btn-yellow:hover {
+  box-shadow: 0 6px 0 #666600, 0 8px 25px rgba(255, 255, 0, 0.6);
+}
+
+.arcade-btn-yellow:active {
+  box-shadow: 0 2px 0 #666600, 0 3px 10px rgba(255, 255, 0, 0.4);
+}
+
+.arcade-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Pixel Border */
+.pixel-border {
+  border: 4px solid #3333aa;
+  box-shadow: 
+    inset 0 0 0 2px #0a0a1a,
+    inset 0 0 0 4px #4444cc,
+    0 0 20px rgba(51, 51, 170, 0.3);
+}
+
+/* Blinking animation */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.animate-blink {
+  animation: blink 1s step-end infinite;
+}
+
+@keyframes pulse-neon {
+  0%, 100% { 
+    text-shadow: 0 0 7px #00ff41, 0 0 10px #00ff41, 0 0 21px #00ff41;
+    opacity: 1;
+  }
+  50% { 
+    text-shadow: 0 0 4px #00ff41, 0 0 7px #00ff41, 0 0 14px #00ff41;
+    opacity: 0.8;
+  }
+}
+
+.animate-pulse-neon {
+  animation: pulse-neon 2s ease-in-out infinite;
+}
+
+/* Scorecard Table */
+.scorecard-grid {
+  font-family: var(--font-retro), monospace;
+  border-collapse: collapse;
+}
+
+.scorecard-grid th,
+.scorecard-grid td {
+  border: 2px solid #3333aa;
+  padding: 4px 8px;
+  text-align: center;
+}
+
+.scorecard-grid th {
+  background: #1a1a4e;
+  color: #00ffff;
+}
+
+.scorecard-grid td {
+  background: #111133;
+}
+
+/* Insert coin animation */
+@keyframes insert-coin {
+  0% { transform: translateY(-20px); opacity: 0; }
+  50% { transform: translateY(5px); opacity: 1; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+.animate-insert-coin {
+  animation: insert-coin 0.5s ease-out;
+}
+
+/* Star field background */
+@keyframes twinkle {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+
+/* Arcade screen flicker */
+@keyframes screen-flicker {
+  0% { opacity: 0.97; }
+  5% { opacity: 0.95; }
+  10% { opacity: 0.98; }
+  15% { opacity: 0.96; }
+  20% { opacity: 0.99; }
+  100% { opacity: 0.98; }
+}
+
+.arcade-screen {
+  animation: screen-flicker 0.15s infinite;
+}
+
+/* Spinning Wheel Animation */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Wheel segment colors */
+.wheel-segment-0 { background: #ff0080; }
+.wheel-segment-1 { background: #00ff41; }
+.wheel-segment-2 { background: #00ffff; }
+.wheel-segment-3 { background: #ffff00; }
+.wheel-segment-4 { background: #ff6600; }
+.wheel-segment-5 { background: #ff00ff; }
+.wheel-segment-6 { background: #0088ff; }
+.wheel-segment-7 { background: #88ff00; }
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0a0a1a;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #3333aa;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #4444cc;
+}
